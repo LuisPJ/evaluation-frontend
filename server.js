@@ -7,17 +7,72 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3005;
 
+const corsOptions = {
+    origin: function (origin, callback) {
+        const environment = process.env.NODE_ENV || 'development';
+        
+        let allowedOrigins;
+        
+        if (environment === 'production') {
+            allowedOrigins = [
+                process.env.FRONTEND_URL,
+                process.env.RAILWAY_STATIC_URL,
+            ].filter(Boolean);
+            
+            if (allowedOrigins.length === 0) {
+                const railwayPattern = /^https:\/\/.*\.railway\.app$/;
+                if (origin && railwayPattern.test(origin)) {
+                    allowedOrigins.push(origin);
+                }
+            }
+        } else {
+            allowedOrigins = [
+                'http://localhost:3005',
+                'http://127.0.0.1:3005',
+                'http://localhost:3000',
+                'http://127.0.0.1:3000',
+            ];
+        }
+        
+        if (!origin) {
+            return callback(null, true);
+        }
+        
+        if (allowedOrigins.includes(origin)) {
+            console.log(`✅ CORS: Permitido desde ${origin}`);
+            callback(null, true);
+        } else {
+            console.warn(`❌ CORS: Bloqueado desde ${origin}`);
+            console.warn(`   Orígenes permitidos: ${allowedOrigins.join(', ')}`);
+            callback(new Error('Acceso bloqueado por política CORS'));
+        }
+    },
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database configuration
+app.use('/api', networkRestrictionMiddleware);
+
+const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+    console.error('ERROR: Variables de entorno faltantes:', missingVars.join(', '));
+    console.error('Configura estas variables en Railway Dashboard o en tu archivo .env');
+    process.exit(1);
+}
+
+
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'seller_evaluation',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -30,8 +85,114 @@ console.log(`   Usuario: ${dbConfig.user}`);
 console.log(`   Base de Datos: ${dbConfig.database}`);
 console.log(`   Password: ${dbConfig.password ? '[CONFIGURADO]' : '[NO CONFIGURADO]'}`);
 
-// Create connection pool
 const pool = mysql.createPool(dbConfig);
+
+function isIPInNetwork(clientIP, networkCIDR) {
+    const [network, prefixLength] = networkCIDR.split('/');
+    const prefix = parseInt(prefixLength);
+    
+    const ipToNumber = (ip) => {
+        return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0;
+    };
+    
+    const clientIPNum = ipToNumber(clientIP);
+    const networkNum = ipToNumber(network);
+    const mask = (0xFFFFFFFF << (32 - prefix)) >>> 0;
+    
+    return (clientIPNum & mask) === (networkNum & mask);
+}
+
+function getClientIP(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+           req.headers['x-real-ip'] ||
+           req.connection.remoteAddress ||
+           req.socket.remoteAddress ||
+           req.ip;
+}
+
+function networkRestrictionMiddleware(req, res, next) {
+    const clientIP = getClientIP(req);
+    
+    // Redes permitidas - CONFIGURADO PARA TU UBICACIÓN
+    const allowedNetworks = [
+        '192.168.0.0/24',    // Tu red WiFi (192.168.0.1 - 192.168.0.254)
+        '127.0.0.0/8',       // Localhost (para desarrollo)
+        '::1',               // IPv6 localhost
+    ];
+    
+    let isAllowed = false;
+    let matchedNetwork = null;
+    
+    for (const network of allowedNetworks) {
+        if (network.includes(':')) {
+            // IPv6 - permitir localhost IPv6
+            if (clientIP === '::1' && network === '::1') {
+                isAllowed = true;
+                matchedNetwork = network;
+                break;
+            }
+        } else if (network.includes('/')) {
+            // CIDR notation
+            if (isIPInNetwork(clientIP, network)) {
+                isAllowed = true;
+                matchedNetwork = network;
+                break;
+            }
+        } else {
+            // IP exacta
+            if (clientIP === network) {
+                isAllowed = true;
+                matchedNetwork = network;
+                break;
+            }
+        }
+    }
+    
+    if (isAllowed) {
+        console.log(`✅ RED: Acceso permitido desde ${clientIP} (red: ${matchedNetwork})`);
+        next();
+    } else {
+        console.warn(`❌ RED: Acceso denegado desde ${clientIP}`);
+        console.warn(`   Redes permitidas: ${allowedNetworks.join(', ')}`);
+        console.warn(`   💡 Solo el equipo en la red local puede acceder`);
+        
+        return res.status(403).json({
+            error: 'Acceso denegado por restricción de red',
+            message: 'Solo se permite el acceso desde la red local autorizada',
+            clientIP: clientIP,
+            hint: 'Conéctate a la red WiFi de la oficina para acceder'
+        });
+    }
+}
+
+function validatePositiveInteger(value, fieldName = 'campo') {
+    const num = parseInt(value);
+    if (isNaN(num) || num <= 0 || !Number.isInteger(num)) {
+        throw new Error(`${fieldName} debe ser un número entero positivo`);
+    }
+    return num;
+}
+
+function validateLeadId(leadId) {
+    if (!leadId || typeof leadId !== 'string') {
+        throw new Error('Lead ID es requerido');
+    }
+    
+    const leadIdPattern = /^[a-zA-Z0-9\-_.]{1,100}$/;
+    if (!leadIdPattern.test(leadId)) {
+        throw new Error('Lead ID contiene caracteres no válidos o es demasiado largo');
+    }
+    
+    return leadId.trim();
+}
+
+function handleValidationError(error, res, operation = 'operación') {
+    console.error(`❌ Error de validación en ${operation}:`, error.message);
+    return res.status(400).json({ 
+        error: 'Datos de entrada no válidos',
+        details: error.message 
+    });
+}
 
 // Helper function to parse time string to seconds
 function timeToSeconds(timeStr) {
@@ -153,13 +314,10 @@ app.get('/api/dashboard', async (req, res) => {
         
         evaluations.forEach((eval, index) => {
             try {
-                // Extract data using regex to avoid JSON parsing issues
                 const calStr = eval.calificacion;
                 
-                // Extract final_score
                 const scoreMatch = calStr.match(/"final_score":\s*(\d+)/);
                 const final_score = scoreMatch ? parseInt(scoreMatch[1]) : null;
-                
                 
                 const timeMatch = calStr.match(/"tiempo_promedio":\s*"(\d{1,2}:\d{1,2}:\d{1,2})"/);
                 const tiempo_promedio = timeMatch ? timeMatch[1] : null;
@@ -183,7 +341,7 @@ app.get('/api/dashboard', async (req, res) => {
                         }
                     }
                 } else {
-                    console.log(`⚠️ Evaluación ${index + 1} ignorada: final_score inválido`);
+                    console.log(`Evaluación ${index + 1} ignorada: final_score inválido`);
                 }
                 
                 // Aggregate by seller (solo si tiene final_score válido)
@@ -269,7 +427,7 @@ app.get('/api/dashboard', async (req, res) => {
 // Get seller details
 app.get('/api/seller/:id', async (req, res) => {
     try {
-        const sellerId = req.params.id;
+        const sellerId = validatePositiveInteger(req.params.id, 'Seller ID');
         const connection = await pool.getConnection();
         
         const [allEvals] = await connection.execute(`
@@ -334,6 +492,11 @@ app.get('/api/seller/:id', async (req, res) => {
             evaluations
         });
     } catch (error) {
+        if (error.message.includes('debe ser un número entero positivo') || 
+            error.message.includes('caracteres no válidos')) {
+            return handleValidationError(error, res, '/api/seller/:id');
+        }
+        
         console.error('Error in /api/seller/:id:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -342,7 +505,7 @@ app.get('/api/seller/:id', async (req, res) => {
 // Get evaluation details
 app.get('/api/evaluation/:leadId', async (req, res) => {
     try {
-        const leadId = req.params.leadId;
+        const leadId = validateLeadId(req.params.leadId);
         const connection = await pool.getConnection();
         
         const [results] = await connection.execute(`
@@ -370,6 +533,12 @@ app.get('/api/evaluation/:leadId', async (req, res) => {
         
         res.json(evaluation);
     } catch (error) {
+        if (error.message.includes('Lead ID') || 
+            error.message.includes('caracteres no válidos') ||
+            error.message.includes('es requerido')) {
+            return handleValidationError(error, res, '/api/evaluation/:leadId');
+        }
+        
         console.error('Error in /api/evaluation/:leadId:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -377,5 +546,31 @@ app.get('/api/evaluation/:leadId', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    const environment = process.env.NODE_ENV || 'development';
+    console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
+    console.log(`🌍 Entorno: ${environment}`);
+    
+    if (environment === 'production') {
+        const frontendUrl = process.env.FRONTEND_URL;
+        const railwayUrl = process.env.RAILWAY_STATIC_URL;
+        
+        console.log(`🛡️ CORS configurado para producción:`);
+        if (frontendUrl) console.log(`   ✅ Frontend URL: ${frontendUrl}`);
+        if (railwayUrl) console.log(`   ✅ Railway URL: ${railwayUrl}`);
+        if (!frontendUrl && !railwayUrl) {
+            console.log(`   ⚠️ Sin URLs específicas - usando patrón *.railway.app`);
+        }
+    } else {
+        console.log(`🛡️ CORS configurado para desarrollo:`);
+        console.log(`   ✅ http://localhost:3005`);
+        console.log(`   ✅ http://127.0.0.1:3005`);
+        console.log(`   ✅ http://localhost:3000`);
+        console.log(`🔗 Accede en: http://localhost:${PORT}`);
+    }
+    
+    console.log(`🌐 RESTRICCIÓN DE RED ACTIVADA:`);
+    console.log(`   ✅ Red permitida: 192.168.0.0/24 (IPs: 192.168.0.1 - 192.168.0.254)`);
+    console.log(`   ✅ Localhost: 127.0.0.1 (para desarrollo)`);
+    console.log(`   ❌ Cualquier otra IP será bloqueada`);
+    console.log(`   💡 Solo el equipo conectado a tu WiFi puede acceder`);
 });

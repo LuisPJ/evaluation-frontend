@@ -6,15 +6,15 @@
     <title>Reporte de Evaluación de Vendedores</title>
     <style>
         :root {
-            /* Paleta de colores profesional */
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --secondary: #10b981;
-            --accent: #f59e0b;
+            /* Paleta de colores profesional - Tonos Rojos */
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --secondary: #ef4444;
+            --accent: #f97316;
             --success: #22c55e;
             --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
+            --danger: #dc2626;
+            --info: #ec4899;
             
             /* Colores neutros */
             --gray-50: #f9fafb;
@@ -173,7 +173,7 @@
         select:focus, input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         }
 
         button {
@@ -376,7 +376,7 @@
         }
 
         .justification {
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(16, 185, 129, 0.05));
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.05), rgba(239, 68, 68, 0.05));
             border-radius: 10px;
             padding: 2rem;
             margin-top: 2rem;
@@ -700,7 +700,7 @@
                 const colors = [
                     { bg: 'var(--gray-50)', border: 'var(--primary)' },
                     { bg: 'var(--surface)', border: 'var(--secondary)' },
-                    { bg: 'rgba(245, 158, 11, 0.05)', border: 'var(--accent)' }
+                    { bg: 'rgba(249, 115, 22, 0.05)', border: 'var(--accent)' }
                 ];
                 
                 Object.entries(breakdown).forEach(([key, value]) => {
