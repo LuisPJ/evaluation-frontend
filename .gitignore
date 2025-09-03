@@ -1,0 +1,115 @@
+# ===============================================
+# .gitignore para Visualizador de Calificaciones
+# ===============================================
+
+# ===== DEPENDENCIAS Y MÓDULOS =====
+# Directorio de módulos de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== ARCHIVOS DE CONFIGURACIÓN SENSIBLES =====
+# Variables de entorno (pueden contener credenciales)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de configuración de base de datos con credenciales
+config/database.json
+config/config.json
+*.config.local.js
+
+# ===== LOGS Y ARCHIVOS TEMPORALES =====
+# Logs de aplicación
+logs/
+*.log
+log/
+
+# Archivos temporales del sistema
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ===== ARCHIVOS DE DESARROLLO =====
+# Archivos de IDEs y editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.atom/
+
+# Archivos de depuración
+.nyc_output/
+coverage/
+*.lcov
+
+# ===== ARCHIVOS DE PRODUCCIÓN Y BUILD =====
+# Directorio de distribución (si se genera)
+dist/
+build/
+out/
+
+# ===== ARCHIVOS DE SISTEMA =====
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.nfs*
+
+# ===== ARCHIVOS DE PRUEBAS =====
+# Cobertura de pruebas
+coverage/
+.nyc_output/
+
+# ===== ARCHIVOS ESPECÍFICOS DEL PROYECTO =====
+# Uploads de usuarios (si los hay)
+uploads/
+public/uploads/
+
+# Backups de base de datos
+*.sql
+*.dump
+backups/
+
+# Archivos de certificados SSL (si los hay)
+*.pem
+*.key
+*.crt
+*.cert
+
+# ===== OTROS =====
+# Cache de npm
+.npm
+.eslintcache
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Evaluación de Vendedores</title>
+    <style>
+        :root {
+            /* Paleta de colores profesional */
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            
+            /* Colores neutros */
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Superficie y texto */
+            --background: var(--gray-50);
+            --surface: #ffffff;
+            --text: var(--gray-900);
+            --text-light: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --border: var(--gray-200);
+            --border-light: var(--gray-100);
+            
+            /* Sombras */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Filters */
+        .filters {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        select, input {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            color: var(--text);
+            min-width: 200px;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        button.reset {
+            background: var(--gray-500);
+        }
+
+        button.reset:hover {
+            background: var(--gray-600);
+        }
+
+        /* Top Sellers */
+        .top-sellers {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+        }
+
+        .seller-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .seller-item {
+            display: grid;
+            grid-template-columns: 60px 1fr auto auto;
+            align-items: center;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .seller-item:hover {
+            background: var(--surface);
+            border-color: var(--primary);
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .rank {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .rank.gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .rank.silver {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+        }
+
+        .rank.bronze {
+            background: linear-gradient(135deg, #fb923c, #ea580c);
+        }
+
+        .rank.other {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        .seller-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        .seller-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 1rem;
+        }
+
+        .score-label {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .score-label.excellent {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 2px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .score-label.good {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 2px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .score-label.regular {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 2px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Evaluation Detail */
+        .evaluation-detail {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+            display: none;
+        }
+
+        .evaluation-detail.active {
+            display: block;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .breakdown-item {
+            background: var(--gray-50);
+            border-radius: 10px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .breakdown-item:nth-child(even) {
+            background: var(--surface);
+            border-left-color: var(--secondary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .breakdown-item:nth-child(3n) {
+            border-left-color: var(--accent);
+        }
+
+        .breakdown-title {
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+            text-transform: capitalize;
+            font-size: 1.1rem;
+        }
+
+        .breakdown-score {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .breakdown-notes {
+            color: var(--text-light);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .justification {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(16, 185, 129, 0.05));
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 2px solid var(--border);
+        }
+
+        .justification-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .justification-text {
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .seller-item {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .breakdown-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reporte de Evaluación de Vendedores</h1>
+            <p class="subtitle">Monitoreo y análisis del desempeño comercial</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Leads Evaluados</div>
+                <div class="stat-value" id="totalLeads">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Promedio Tiempo de Respuesta</div>
+                <div class="stat-value" id="avgResponseTime">00:00:00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Promedio de Calificación</div>
+                <div class="stat-value" id="avgScore">0</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Filtrar por:</span>
+                <select id="sellerFilter" onchange="onSellerChange()">
+                    <option value="">Todos los vendedores</option>
+                </select>
+                <select id="leadFilter" onchange="onLeadChange()">
+                    <option value="">Seleccionar Lead específico</option>
+                    
+                </select>
+                <button class="reset" onclick="resetFilters()">🔄 Limpiar Filtros</button>
+            </div>
+        </div>
+
+        <div class="top-sellers">
+            <h2 class="section-title">🏆 Top Vendedores</h2>
+            <div class="loading" id="loadingTop">
+                <div class="spinner"></div>
+            </div>
+            <div class="seller-list" id="topSellersList"></div>
+        </div>
+
+        <div class="evaluation-detail" id="evaluationDetail">
+            <h2 class="section-title">📋 Detalle de Evaluación</h2>
+            <div id="evaluationContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3005/api';
+        let allData = null;
+
+        async function loadDashboard() {
+            try {
+                showLoading('loadingTop');
+                const response = await fetch(`${API_URL}/dashboard`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allData = data;
+                
+                updateStats(data.stats);
+                populateSellers(data.sellers);
+                populateLeads(data.leads);
+                renderTopSellers(data.topSellers);
+                hideLoading('loadingTop');
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                hideLoading('loadingTop');
+                showError('Error cargando los datos del dashboard');
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalLeads').textContent = stats.totalLeads || 0;
+            document.getElementById('avgResponseTime').textContent = formatTime(stats.avgResponseTime);
+            document.getElementById('avgScore').textContent = Math.round(stats.avgScore || 0);
+        }
+
+        function formatTime(seconds) {
+            if (!seconds) return '00:00:00';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function populateSellers(sellers) {
+            const select = document.getElementById('sellerFilter');
+            select.innerHTML = '<option value="">Todos los vendedores</option>';
+            if (sellers && sellers.length > 0) {
+                sellers.forEach(seller => {
+                    const option = document.createElement('option');
+                    option.value = seller.id;
+                    option.textContent = seller.nombre;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function populateLeads(leads) {
+            const select = document.getElementById('leadFilter');
+            select.innerHTML = '<option value="">Seleccionar Lead específico</option>';
+            if (leads && leads.length > 0) {
+                leads.forEach(lead => {
+                    const option = document.createElement('option');
+                    option.value = lead.lead_id;
+                    option.textContent = `${lead.lead_id} - ${lead.seller_name} (${lead.fecha})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function renderTopSellers(topSellers) {
+            const container = document.getElementById('topSellersList');
+            if (!topSellers || topSellers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <p>No hay datos de vendedores disponibles</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = topSellers.map((seller, index) => {
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : 'other';
+                const label = getScoreLabel(seller.avgScore);
+                
+                return `
+                    <div class="seller-item" onclick="selectSeller(${seller.id})">
+                        <div class="rank ${rankClass}">${index + 1}</div>
+                        <div class="seller-name">${seller.nombre}</div>
+                        <div class="seller-score">${Math.round(seller.avgScore)}</div>
+                        <div class="score-label ${label.class}">${label.text}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getScoreLabel(score) {
+            if (score >= 80) return { text: 'EXCELENTE', class: 'excellent' };
+            if (score >= 60) return { text: 'BUENO', class: 'good' };
+            return { text: 'REGULAR', class: 'regular' };
+        }
+
+        // Function to select a seller from the ranking
+        function selectSeller(sellerId) {
+            console.log('🎯 Vendedor seleccionado desde ranking:', sellerId);
+            
+            // Update the dropdown
+            document.getElementById('sellerFilter').value = sellerId;
+            
+            // Trigger the automatic filter
+            onSellerChange();
+        }
+
+        async function loadSellerDetails(sellerId) {
+            try {
+                const response = await fetch(`${API_URL}/seller/${sellerId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Update stats with seller-specific data
+                updateStats(data.stats);
+                
+                // Show only this seller in the ranking
+                if (allData && allData.topSellers) {
+                    const selectedSeller = allData.topSellers.find(seller => seller.id == sellerId);
+                    if (selectedSeller) {
+                        renderTopSellers([selectedSeller]);
+                    }
+                }
+                
+                // Update filter
+                document.getElementById('sellerFilter').value = sellerId;
+                
+                // Hide evaluation detail
+                document.getElementById('evaluationDetail').classList.remove('active');
+            } catch (error) {
+                console.error('Error loading seller details:', error);
+                showError('Error cargando los detalles del vendedor');
+            }
+        }
+
+        async function loadLeadDetails(leadId) {
+            try {
+                const response = await fetch(`${API_URL}/evaluation/${leadId}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showError('No se encontró la evaluación para este Lead ID');
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const evaluation = await response.json();
+                
+                if (!evaluation || !evaluation.calificacion) {
+                    showError('No se encontró la evaluación o los datos están incompletos');
+                    return;
+                }
+                
+                const cal = evaluation.calificacion;
+                const breakdown = cal.breakdown || {};
+                
+                // Header con información del lead
+                let breakdownHTML = `
+                    <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; border-left: 4px solid var(--primary);">
+                        <h3 style="color: var(--primary); margin-bottom: 1rem;">📋 Lead: ${evaluation.lead_id}</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div><strong>Vendedor:</strong> ${evaluation.seller_name}</div>
+                            <div><strong>Fecha:</strong> ${evaluation.fecha}</div>
+                            <div><strong>Calificación Final:</strong> <span style="color: var(--primary); font-weight: bold; font-size: 1.2rem;">${cal.final_score}</span></div>
+                            <div><strong>Etiqueta:</strong> <span class="score-label ${getScoreLabel(cal.final_score).class}">${cal.label || 'N/A'}</span></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Breakdown en 3 columnas con colores intercalados
+                breakdownHTML += '<div class="breakdown-grid" style="grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">';
+                
+                let colorIndex = 0;
+                const colors = [
+                    { bg: 'var(--gray-50)', border: 'var(--primary)' },
+                    { bg: 'var(--surface)', border: 'var(--secondary)' },
+                    { bg: 'rgba(245, 158, 11, 0.05)', border: 'var(--accent)' }
+                ];
+                
+                Object.entries(breakdown).forEach(([key, value]) => {
+                    const title = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const color = colors[colorIndex % 3];
+                    
+                    breakdownHTML += `
+                        <div style="
+                            background: ${color.bg}; 
+                            border-radius: 10px; 
+                            padding: 1.5rem; 
+                            border-left: 4px solid ${color.border};
+                            box-shadow: var(--shadow-sm);
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)'" 
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)'">
+                            <div style="font-weight: 700; color: var(--text); margin-bottom: 0.75rem; font-size: 1.1rem;">
+                                ${title}
+                            </div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: ${color.border}; margin-bottom: 1rem;">
+                                ${value.score} de ${value.max}
+                            </div>
+                            <div style="color: var(--text-light); line-height: 1.7; font-size: 0.95rem;">
+                                ${value.notes || 'Sin observaciones'}
+                            </div>
+                        </div>
+                    `;
+                    colorIndex++;
+                });
+                
+                breakdownHTML += '</div>';
+                
+                // Justificación al final
+                if (cal.justification) {
+                    breakdownHTML += `
+                        <div class="justification" style="margin-top: 2rem;">
+                            <div class="justification-title">🎯 Justificación de la Calificación</div>
+                            <div class="justification-text">${cal.justification}</div>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('evaluationContent').innerHTML = breakdownHTML;
+                document.getElementById('evaluationDetail').classList.add('active');
+                
+                // Scroll to the evaluation detail
+                document.getElementById('evaluationDetail').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error loading lead details:', error);
+                showError('Error al cargar los detalles del lead');
+            }
+        }
+
+        // Auto-filter when seller changes
+        async function onSellerChange() {
+            const sellerId = document.getElementById('sellerFilter').value;
+            
+            if (sellerId) {
+                console.log('🎯 Filtro automático por vendedor:', sellerId);
+                
+                // Clear lead filter
+                document.getElementById('leadFilter').value = '';
+                
+                // Load seller details
+                await loadSellerDetails(sellerId);
+                
+                // Update leads dropdown to show only leads from this seller
+                if (allData && allData.leads) {
+                    const sellerLeads = allData.leads.filter(lead => lead.sellers_id == sellerId);
+                    populateLeads(sellerLeads);
+                }
+                
+                // Hide evaluation detail
+                document.getElementById('evaluationDetail').classList.remove('active');
+            } else {
+                // If "Todos los vendedores" is selected, reset to dashboard
+                console.log('🏠 Volviendo al dashboard completo');
+                await loadDashboard();
+                document.getElementById('evaluationDetail').classList.remove('active');
+            }
+        }
+
+        // Auto-filter when lead changes
+        async function onLeadChange() {
+            const leadId = document.getElementById('leadFilter').value;
+            
+            if (leadId) {
+                console.log('🎯 Filtro automático por lead:', leadId);
+                
+                // Clear seller filter
+                document.getElementById('sellerFilter').value = '';
+                
+                // Load lead details
+                await loadLeadDetails(leadId);
+                
+                // Restore all leads in dropdown
+                if (allData && allData.leads) {
+                    populateLeads(allData.leads);
+                }
+            }
+        }
+
+        // Keep the old function for backward compatibility (though it's no longer used in UI)
+        async function applyFilters() {
+            const sellerId = document.getElementById('sellerFilter').value;
+            const leadId = document.getElementById('leadFilter').value;
+            
+            if (leadId) {
+                await onLeadChange();
+            } else if (sellerId) {
+                await onSellerChange();
+            } else {
+                await loadDashboard();
+                document.getElementById('evaluationDetail').classList.remove('active');
+            }
+        }
+
+        function resetFilters() {
+            console.log('🔄 Limpiando todos los filtros');
+            
+            // Clear both dropdowns
+            document.getElementById('sellerFilter').value = '';
+            document.getElementById('leadFilter').value = '';
+            document.getElementById('evaluationDetail').classList.remove('active');
+            
+            // Restore all leads in dropdown
+            if (allData && allData.leads) {
+                populateLeads(allData.leads);
+            }
+            
+            // Reload dashboard
+            loadDashboard();
+        }
+
+        function showLoading(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function hideLoading(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function showError(message) {
+            // Simple error display - could be enhanced with a toast notification
+            alert(message);
+        }
+
+        // Load dashboard on page load
+        window.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
