@@ -388,12 +388,98 @@
             color: var(--primary);
             margin-bottom: 1rem;
             font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .justification-title:hover {
+            color: var(--primary-dark);
+            transform: translateX(4px);
         }
 
         .justification-text {
             color: var(--text);
             line-height: 1.8;
             font-size: 1rem;
+        }
+
+        .justification-expand-icon {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .justification-expanded .justification-expand-icon {
+            transform: rotate(90deg);
+        }
+
+        .justification-sections {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .justification-expanded .justification-sections {
+            display: block;
+        }
+
+        .justification-section {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .justification-section:nth-child(even) {
+            border-left-color: var(--secondary);
+        }
+
+        .justification-section:nth-child(3n) {
+            border-left-color: var(--accent);
+        }
+
+        .justification-section-title {
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            text-transform: capitalize;
+        }
+
+        .justification-subsection {
+            margin-bottom: 1rem;
+        }
+
+        .justification-subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .justification-subsection-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .justification-subsection-title.aciertos {
+            color: var(--success);
+        }
+
+        .justification-subsection-title.errores {
+            color: var(--danger);
+        }
+
+        .justification-subsection-content {
+            color: var(--text-light);
+            line-height: 1.6;
+            font-size: 0.9rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--border);
         }
 
         /* Loading */
@@ -469,6 +555,9 @@
         <div class="header">
             <h1>Reporte de Evaluación de Vendedores</h1>
             <p class="subtitle">Monitoreo y análisis del desempeño comercial</p>
+            <div id="routeIndicator" style="margin-top: 1rem; padding: 0.75rem 1rem; background: rgba(220, 38, 38, 0.1); border: 1px solid var(--primary); border-radius: 8px; color: var(--primary); font-weight: 600; display: none;">
+                <span id="routeText"></span>
+            </div>
         </div>
 
         <div class="stats-grid">
@@ -517,11 +606,46 @@
     <script>
         const API_URL = 'http://localhost:3005/api';
         let allData = null;
+        
+        // Detectar ruta actual para permisos
+        function getCurrentRoute() {
+            const path = decodeURIComponent(window.location.pathname);
+            console.log('🔍 Detectando ruta:', path);
+            
+            if (path.includes('Daniela') || path.includes('Berdejo')) {
+                console.log('✅ Ruta detectada: Daniela Berdejo');
+                return '/Daniela Berdejo';
+            } else if (path.includes('Katherine') || path.includes('López') || path.includes('Lopez')) {
+                console.log('✅ Ruta detectada: Katherine López');
+                return '/Katherine López';
+            }
+            console.log('ℹ️ Sin ruta específica detectada');
+            return null;
+        }
+        
+        // Función helper para hacer requests con headers de ruta
+        async function fetchWithRoute(url, options = {}) {
+            const route = getCurrentRoute();
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (route) {
+                headers['X-Route-Path'] = route;
+                console.log(`🔐 Enviando header de ruta: ${route}`);
+            }
+            
+            return fetch(url, {
+                ...options,
+                headers
+            });
+        }
 
         async function loadDashboard() {
             try {
                 showLoading('loadingTop');
-                const response = await fetch(`${API_URL}/dashboard`);
+                const response = await fetchWithRoute(`${API_URL}/dashboard`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -576,7 +700,8 @@
                 leads.forEach(lead => {
                     const option = document.createElement('option');
                     option.value = lead.lead_id;
-                    option.textContent = `${lead.lead_id} - ${lead.seller_name} (${lead.fecha})`;
+                    const origen = lead.origen_bd ? ` [${lead.origen_bd}]` : '';
+                    option.textContent = `${lead.lead_id} - ${lead.seller_name} (${lead.fecha})${origen}`;
                     select.appendChild(option);
                 });
             }
@@ -612,7 +737,18 @@
         function getScoreLabel(score) {
             if (score >= 80) return { text: 'EXCELENTE', class: 'excellent' };
             if (score >= 60) return { text: 'BUENO', class: 'good' };
-            return { text: 'REGULAR', class: 'regular' };
+            return { text: 'MALO', class: 'regular' };
+        }
+
+        function getOrigenIcon(origen) {
+            switch(origen) {
+                case 'Distrito Cafetero':
+                    return '☕'; // Icono de café para Distrito Cafetero
+                case 'Big Center':
+                    return '🏢'; // Icono de edificio para Big Center
+                default:
+                    return '📍'; // Icono genérico de ubicación
+            }
         }
 
         // Function to select a seller from the ranking
@@ -628,7 +764,7 @@
 
         async function loadSellerDetails(sellerId) {
             try {
-                const response = await fetch(`${API_URL}/seller/${sellerId}`);
+                const response = await fetchWithRoute(`${API_URL}/seller/${sellerId}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -660,7 +796,7 @@
 
         async function loadLeadDetails(leadId) {
             try {
-                const response = await fetch(`${API_URL}/evaluation/${leadId}`);
+                const response = await fetchWithRoute(`${API_URL}/evaluation/${leadId}`);
                 
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -672,12 +808,38 @@
                 
                 const evaluation = await response.json();
                 
-                if (!evaluation || !evaluation.calificacion) {
+                console.log('🔍 Datos recibidos:', evaluation);
+                
+                if (!evaluation) {
                     showError('No se encontró la evaluación o los datos están incompletos');
                     return;
                 }
                 
-                const cal = evaluation.calificacion;
+                // Manejar diferentes estructuras de datos
+                let cal, chatOriginal;
+                
+                if (evaluation.evaluacion) {
+                    // Nueva estructura: { evaluacion: {...}, chat_original: [...] }
+                    cal = evaluation.evaluacion;
+                    chatOriginal = evaluation.chat_original;
+                    console.log('📊 Usando estructura evaluacion:', cal);
+                } else if (evaluation.calificacion) {
+                    // Estructura anidada: { calificacion: { evaluacion: {...}, chat_original: [...] } }
+                    if (evaluation.calificacion.evaluacion) {
+                        cal = evaluation.calificacion.evaluacion;
+                        chatOriginal = evaluation.calificacion.chat_original;
+                        console.log('📊 Usando estructura calificacion.evaluacion:', cal);
+                    } else {
+                        // Estructura anterior: { calificacion: {...}, chat_original: [...] }
+                        cal = evaluation.calificacion;
+                        chatOriginal = evaluation.chat_original;
+                        console.log('📊 Usando estructura calificacion:', cal);
+                    }
+                } else {
+                    console.log('❌ No se encontró estructura válida');
+                    showError('No se encontró la evaluación o los datos están incompletos');
+                    return;
+                }
                 const breakdown = cal.breakdown || {};
                 
                 // Header con información del lead
@@ -687,11 +849,17 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                             <div><strong>Vendedor:</strong> ${evaluation.seller_name}</div>
                             <div><strong>Fecha:</strong> ${evaluation.fecha}</div>
-                            <div><strong>Calificación Final:</strong> <span style="color: var(--primary); font-weight: bold; font-size: 1.2rem;">${cal.final_score}</span></div>
+                            <div><strong>Origen:</strong> <span style="color: var(--accent); font-weight: bold;">${getOrigenIcon(evaluation.origen_bd)} ${evaluation.origen_bd || 'No especificado'}</span></div>
+                            <div><strong>Calificación Final:</strong> <span style="color: var(--primary); font-weight: bold; font-size: 1.2rem;">${cal.final_score || 'N/A'}</span></div>
                             <div><strong>Etiqueta:</strong> <span class="score-label ${getScoreLabel(cal.final_score).class}">${cal.label || 'N/A'}</span></div>
                         </div>
                     </div>
                 `;
+                
+                // Agregar sección del chat si existe
+                if (chatOriginal && Array.isArray(chatOriginal) && chatOriginal.length > 0) {
+                    breakdownHTML += renderChatOriginal(chatOriginal);
+                }
                 
                 // Breakdown en 3 columnas con colores intercalados
                 breakdownHTML += '<div class="breakdown-grid" style="grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">';
@@ -735,12 +903,7 @@
                 
                 // Justificación al final
                 if (cal.justification) {
-                    breakdownHTML += `
-                        <div class="justification" style="margin-top: 2rem;">
-                            <div class="justification-title">🎯 Justificación de la Calificación</div>
-                            <div class="justification-text">${cal.justification}</div>
-                        </div>
-                    `;
+                    breakdownHTML += renderJustification(cal.justification);
                 }
                 
                 document.getElementById('evaluationContent').innerHTML = breakdownHTML;
@@ -752,6 +915,191 @@
             } catch (error) {
                 console.error('Error loading lead details:', error);
                 showError('Error al cargar los detalles del lead');
+            }
+        }
+
+        // Render justification with expandable sections
+        function renderJustification(justification) {
+            // Si es un string simple (formato anterior), mostrarlo como antes
+            if (typeof justification === 'string') {
+                return `
+                    <div class="justification" style="margin-top: 2rem;">
+                        <div class="justification-title">🎯 Justificación de la Calificación</div>
+                        <div class="justification-text">${justification}</div>
+                    </div>
+                `;
+            }
+            
+            // Si es el nuevo formato con estructura de objeto
+            let justificationHTML = `
+                <div class="justification" style="margin-top: 2rem;">
+                    <div class="justification-title" onclick="toggleJustification(this)">
+                        🎯 Justificación de la Calificación
+                        <span class="justification-expand-icon">▶</span>
+                    </div>
+            `;
+            
+            // Mostrar justificación general si existe
+            if (justification.general) {
+                justificationHTML += `
+                    <div class="justification-text">${justification.general}</div>
+                `;
+            }
+            
+            // Crear secciones expandibles
+            justificationHTML += '<div class="justification-sections">';
+            
+            // Procesar cada sección (saludo_apertura, desarrollo_conversacion, cierre_gestion)
+            Object.entries(justification).forEach(([sectionKey, sectionData]) => {
+                if (sectionKey === 'general' || typeof sectionData !== 'object') return;
+                
+                const sectionTitle = sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                justificationHTML += `
+                    <div class="justification-section">
+                        <div class="justification-section-title">${sectionTitle}</div>
+                `;
+                
+                // Mostrar aciertos si existen
+                if (sectionData.aciertos) {
+                    justificationHTML += `
+                        <div class="justification-subsection">
+                            <div class="justification-subsection-title aciertos">✅ Aciertos</div>
+                            <div class="justification-subsection-content">${sectionData.aciertos}</div>
+                        </div>
+                    `;
+                }
+                
+                // Mostrar errores si existen
+                if (sectionData.errores) {
+                    justificationHTML += `
+                        <div class="justification-subsection">
+                            <div class="justification-subsection-title errores">❌ Errores</div>
+                            <div class="justification-subsection-content">${sectionData.errores}</div>
+                        </div>
+                    `;
+                }
+                
+                justificationHTML += '</div>';
+            });
+            
+            justificationHTML += '</div></div>';
+            
+            return justificationHTML;
+        }
+        
+        // Toggle justification expansion
+        function toggleJustification(titleElement) {
+            const justificationDiv = titleElement.closest('.justification');
+            justificationDiv.classList.toggle('justification-expanded');
+        }
+        
+        // Renderizar chat original
+        function renderChatOriginal(chatData) {
+            if (!chatData || !Array.isArray(chatData) || chatData.length === 0) {
+                return '';
+            }
+            
+            let chatHTML = `
+                <div class="chat-container" style="margin-bottom: 2rem;">
+                    <div class="chat-title" onclick="toggleChat(this)" style="
+                        background: var(--surface);
+                        padding: 0.5rem;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border: 2px solid var(--border);
+                        transition: all 0.3s ease;
+                        margin-bottom: 1rem;
+                    ">
+                        <span style="font-weight: 600; color: var(--primary); font-size: 1.1rem;">
+                            💬 Chat Original (${chatData.length} mensajes)
+                        </span>
+                        <span class="chat-expand-icon" style="
+                            font-size: 1.2rem;
+                            color: var(--text-muted);
+                            transition: transform 0.3s ease;
+                        ">▶</span>
+                    </div>
+                    <div class="chat-content" style="
+                        display: none;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        background: var(--surface);
+                        border-radius: 10px;
+                        border: 2px solid var(--border);
+                        padding: 0.5rem;
+                    ">
+            `;
+            
+            chatData.forEach((message, index) => {
+                const isBot = message.autor === 'SalesBot';
+                
+                chatHTML += `
+                    <div class="chat-message" style="
+                        margin-bottom: 0.3rem;
+                        padding: 0.2rem 0;
+                        border-bottom: 1px solid var(--border);
+                        font-size: 0.85rem;
+                        line-height: 1.3;
+                    ">
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 0.1rem;
+                        ">
+                            <span style="
+                                font-weight: 600;
+                                color: ${isBot ? 'var(--primary)' : 'var(--text)'};
+                                font-size: 0.8rem;
+                            ">
+                                ${isBot ? '🤖' : '👤'} ${message.autor}
+                            </span>
+                            <span style="
+                                font-size: 0.7rem;
+                                color: var(--text-muted);
+                            ">
+                                ${message.fecha}
+                            </span>
+                        </div>
+                        <div style="
+                            color: var(--text);
+                            white-space: pre-wrap;
+                            word-wrap: break-word;
+                        ">
+                            ${message.texto}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            chatHTML += `
+                    </div>
+                </div>
+            `;
+            
+            return chatHTML;
+        }
+        
+        // Toggle chat expansion
+        function toggleChat(titleElement) {
+            const chatContainer = titleElement.closest('.chat-container');
+            const chatContent = chatContainer.querySelector('.chat-content');
+            const expandIcon = chatContainer.querySelector('.chat-expand-icon');
+            
+            const isExpanded = chatContent.style.display === 'block';
+            
+            if (isExpanded) {
+                chatContent.style.display = 'none';
+                expandIcon.style.transform = 'rotate(0deg)';
+                titleElement.style.borderColor = 'var(--border)';
+            } else {
+                chatContent.style.display = 'block';
+                expandIcon.style.transform = 'rotate(90deg)';
+                titleElement.style.borderColor = 'var(--primary)';
             }
         }
 
@@ -849,8 +1197,150 @@
             alert(message);
         }
 
+        // Mostrar indicador de ruta si aplica
+        function showRouteIndicator() {
+            const route = getCurrentRoute();
+            const indicator = document.getElementById('routeIndicator');
+            const routeText = document.getElementById('routeText');
+            
+            if (route) {
+                const permissions = {
+                    '/Daniela Berdejo': ['María Calle', 'Geraldin Cardona'],
+                    '/Katherine López': ['Erick Ponce', 'Camila Muñoz']
+                };
+                
+                const allowedSellers = permissions[route] || [];
+                routeText.innerHTML = `
+                    🔐 Vista: <strong>${route.replace('/', '')}</strong><br>
+                    👥 Vendedores permitidos: ${allowedSellers.join(', ')}
+                `;
+                indicator.style.display = 'block';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        // Verificar autenticación al cargar la página
+        async function checkAuthentication() {
+            try {
+                const response = await fetch(`${API_URL}/auth/check`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    console.log('🔒 No hay sesión activa, redirigiendo a login');
+                    window.location.href = '/login.html';
+                    return false;
+                }
+                
+                const data = await response.json();
+                console.log('✅ Usuario autenticado:', data.user.email);
+                
+                // Agregar botón de logout
+                addLogoutButton(data.user);
+                
+                return true;
+            } catch (error) {
+                console.error('Error verificando autenticación:', error);
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+
+        // Agregar botón de logout
+        function addLogoutButton(user) {
+            const header = document.querySelector('.header');
+            const logoutContainer = document.createElement('div');
+            logoutContainer.style.cssText = `
+                margin-top: 1rem; 
+                padding: 1rem; 
+                background: rgba(220, 38, 38, 0.1); 
+                border: 1px solid var(--primary); 
+                border-radius: 8px; 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center;
+            `;
+            
+            logoutContainer.innerHTML = `
+                <div>
+                    <strong>👤 ${user.nombre || user.email}</strong>
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">Sesión activa</div>
+                </div>
+                <button onclick="logout()" style="
+                    background: var(--danger); 
+                    color: white; 
+                    border: none; 
+                    padding: 0.5rem 1rem; 
+                    border-radius: 6px; 
+                    cursor: pointer; 
+                    font-size: 0.9rem;
+                ">🔓 Cerrar Sesión</button>
+            `;
+            
+            header.appendChild(logoutContainer);
+        }
+
+        // Función de logout
+        async function logout() {
+            if (!confirm('¿Está seguro que desea cerrar sesión?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                console.log('🔓 Sesión cerrada');
+                
+                // Limpiar datos locales
+                allData = null;
+                
+                // Prevenir navegación hacia atrás
+                window.history.pushState(null, null, '/login.html');
+                window.location.href = '/login.html';
+                
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                // Forzar redirección incluso si hay error
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Prevenir navegación hacia atrás después del logout
+        window.addEventListener('popstate', function(event) {
+            // Verificar si hay sesión activa
+            fetch(`${API_URL}/auth/check`, {
+                method: 'GET',
+                credentials: 'include'
+            }).then(response => {
+                if (!response.ok) {
+                    // No hay sesión, redirigir a login
+                    window.location.href = '/login.html';
+                }
+            }).catch(() => {
+                window.location.href = '/login.html';
+            });
+        });
+
+        // Prevenir cache de la página
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
         // Load dashboard on page load
-        window.addEventListener('DOMContentLoaded', loadDashboard);
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAuthentication();
+            if (isAuthenticated) {
+                showRouteIndicator();
+                loadDashboard();
+            }
+        });
     </script>
 </body>
 </html>

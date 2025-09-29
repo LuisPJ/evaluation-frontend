@@ -1,6 +1,6 @@
 # 📊 Visualizador de Calificaciones
 
-Sistema web profesional para el monitoreo y análisis del desempeño comercial de vendedores, con dashboard interactivo y evaluaciones detalladas.
+Sistema web para el monitoreo y análisis del desempeño comercial de vendedores, con dashboard interactivo y evaluaciones detalladas.
 
 ## 🎯 Características Principales
 

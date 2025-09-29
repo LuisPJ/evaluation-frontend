@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Evaluación de Vendedores</title>
+    <style>
+        :root {
+            /* Paleta de colores profesional - Tonos Rojos */
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --secondary: #ef4444;
+            --accent: #f97316;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            
+            /* Colores neutros */
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Superficie y texto */
+            --background: var(--gray-50);
+            --surface: #ffffff;
+            --text: var(--gray-900);
+            --text-light: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --border: var(--gray-200);
+            --border-light: var(--gray-100);
+            
+            /* Sombras */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-light);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            padding-right: 48px; /* Espacio para el botón del ojo */
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .form-input.error {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            background: var(--gray-400);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        .login-button.loading .loading-spinner {
+            display: inline-block;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            bottom: 17px;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .security-info {
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .security-info p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .security-info .security-features {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .security-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 2rem;
+                margin: 1rem;
+                border-radius: 12px;
+            }
+
+            .login-header h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🔐 Iniciar Sesión</h1>
+            <p>Acceso al sistema de evaluación de vendedores</p>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            <strong>Error:</strong> <span id="errorText"></span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    required 
+                    autocomplete="email"
+                    placeholder="usuario@ejemplo.com"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Contraseña</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    required 
+                    autocomplete="current-password"
+                    placeholder="••••••••"
+                >
+                <button type="button" class="password-toggle" onclick="togglePassword()">
+                    👁️
+                </button>
+            </div>
+
+            <button type="submit" class="login-button" id="loginButton">
+                <span class="loading-spinner"></span>
+                <span class="button-text">Iniciar Sesión</span>
+            </button>
+        </form>
+
+        <div class="security-info">
+            <p><strong>🔒 Conexión Segura</strong></p>
+            <div class="security-features">
+                <div class="security-feature">
+                    <span>✅</span>
+                    <span>Cifrado</span>
+                </div>
+                <div class="security-feature">
+                    <span>✅</span>
+                    <span>Sesión Protegida</span>
+                </div>
+                <div class="security-feature">
+                    <span>✅</span>
+                    <span>Red Privada</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3005/api';
+        
+        // Prevenir acceso si ya está logueado
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si ya hay una sesión activa
+            fetch(`${API_URL}/auth/check`, {
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.authenticated) {
+                    // Ya está logueado, redirigir
+                    window.location.href = data.redirectUrl || '/';
+                }
+            })
+            .catch(error => {
+                console.log('No hay sesión activa');
+            });
+        });
+
+        // Función para mostrar/ocultar contraseña
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+            }
+        }
+
+        // Función para mostrar errores
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.add('show');
+            
+            // Auto-ocultar después de 5 segundos
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Función para ocultar errores
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
+        }
+
+        // Función para mostrar loading
+        function showLoading() {
+            const button = document.getElementById('loginButton');
+            const buttonText = button.querySelector('.button-text');
+            button.classList.add('loading');
+            button.disabled = true;
+            buttonText.textContent = 'Verificando...';
+        }
+
+        // Función para ocultar loading
+        function hideLoading() {
+            const button = document.getElementById('loginButton');
+            const buttonText = button.querySelector('.button-text');
+            button.classList.remove('loading');
+            button.disabled = false;
+            buttonText.textContent = 'Iniciar Sesión';
+        }
+
+        // Manejo del formulario de login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            hideError();
+            showLoading();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // Validaciones básicas
+            if (!email || !password) {
+                hideLoading();
+                showError('Por favor, complete todos los campos');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Login exitoso
+                    console.log('✅ Login exitoso:', data);
+                    
+                    // Redirigir según el usuario
+                    window.location.href = data.redirectUrl;
+                } else {
+                    // Error en login
+                    hideLoading();
+                    showError(data.message || 'Error al iniciar sesión');
+                    
+                    // Marcar campos como error
+                    if (data.field) {
+                        document.getElementById(data.field).classList.add('error');
+                        setTimeout(() => {
+                            document.getElementById(data.field).classList.remove('error');
+                        }, 3000);
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error en login:', error);
+                showError('Error de conexión. Verifique su red e intente nuevamente.');
+            }
+        });
+
+        // Limpiar errores al escribir
+        document.getElementById('email').addEventListener('input', hideError);
+        document.getElementById('password').addEventListener('input', hideError);
+
+        // Prevenir navegación hacia atrás después del login
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
