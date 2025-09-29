@@ -11,6 +11,9 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3005;
 
+// Configurar trust proxy para Railway
+app.set('trust proxy', 1);
+
 const corsOptions = {
     origin: function (origin, callback) {
         const environment = process.env.NODE_ENV || 'development';
@@ -74,9 +77,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS en producción
+        secure: false, // Cambiado a false para Railway
         httpOnly: true, // Prevenir XSS
-        maxAge: 24 * 60 * 60 * 1000 // 24 horas
+        maxAge: 24 * 60 * 60 * 1000, // 24 horas
+        sameSite: 'none' // Permitir cookies cross-site
     }
 }));
 
