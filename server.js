@@ -56,7 +56,9 @@ const corsOptions = {
         }
     },
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Route-Path']
 };
 
 // Rate limiting para login
@@ -77,7 +79,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Cambiado a false para Railway
+        secure: true, // HTTPS en producción
         httpOnly: true, // Prevenir XSS
         maxAge: 24 * 60 * 60 * 1000, // 24 horas
         sameSite: 'none' // Permitir cookies cross-site
