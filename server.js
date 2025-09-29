@@ -21,6 +21,7 @@ const corsOptions = {
             allowedOrigins = [
                 process.env.FRONTEND_URL,
                 process.env.RAILWAY_STATIC_URL,
+                'https://evaluation-frontend-production.up.railway.app'
             ].filter(Boolean);
             
             if (allowedOrigins.length === 0) {
