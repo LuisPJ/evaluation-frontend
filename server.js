@@ -85,7 +85,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static('public'));
 
-app.use('/api', networkRestrictionMiddleware);
+// app.use('/api', networkRestrictionMiddleware); // Comentado para permitir acceso desde cualquier IP
 
 const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
