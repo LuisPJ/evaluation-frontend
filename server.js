@@ -1149,6 +1149,11 @@ app.get('/Daniel%20%C3%81lvarez', requireAuthPage, requireSpecificRoute('/Daniel
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/%2FDaniel%20%C3%81lvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Acceso autorizado a Daniel Álvarez (doble codificación) para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.get('/Daniel%20Alvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
     console.log(`✅ Acceso autorizado a Daniel Alvarez (sin acento) para: ${req.session.user.email}`);
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
