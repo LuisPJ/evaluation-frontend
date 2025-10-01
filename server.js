@@ -313,6 +313,9 @@ const ROUTE_PERMISSIONS = {
             'Camila Muñoz',       // Nombre unificado
             'María Camila Muñoz'  // Nombre original en BD (se unifica a Camila Muñoz)
         ]
+    },
+    '/Daniel Álvarez': {
+        allowedSellers: [] // Array vacío significa acceso a TODOS los vendedores
     }
 };
 
@@ -336,6 +339,8 @@ function getRoutePermissions(req) {
                 routePath = '/Daniela Berdejo';
             } else if (possibleRoute.includes('Katherine') || possibleRoute.includes('López') || possibleRoute.includes('Lopez')) {
                 routePath = '/Katherine López';
+            } else if (possibleRoute.includes('Daniel') || possibleRoute.includes('Álvarez') || possibleRoute.includes('Alvarez')) {
+                routePath = '/Daniel Álvarez';
             }
         }
     }
@@ -384,8 +389,9 @@ function requireRouteAccess(routeName) {
 // Función para determinar la ruta del usuario basada en su email
 function getUserRoute(email) {
     const routeMapping = {
-        'daniela.berdejo@ejemplo.com': '/Daniela Berdejo',
-        'katherine.lopez@ejemplo.com': '/Katherine López'
+        'daniela.berdejo@mdm.com': '/Daniela Berdejo',
+        'katherine.lopez@mdm.com': '/Katherine López',
+        'daniel.alvarez@mdm.com': '/Daniel Álvarez'
         // Agregar más usuarios según sea necesario
     };
     
@@ -459,6 +465,11 @@ function getUnifiedSellerName(sellerName) {
 // Función para filtrar vendedores según permisos
 function filterSellersByPermissions(sellers, permissions) {
     if (!permissions || !permissions.allowedSellers) {
+        return sellers;
+    }
+    
+    // Si el array de vendedores permitidos está vacío, significa acceso a TODOS
+    if (permissions.allowedSellers.length === 0) {
         return sellers;
     }
     
@@ -1124,6 +1135,33 @@ app.get(/^\/Katherine.*L.*pez$/i, requireAuthPage, requireSpecificRoute('/Kather
 
 app.get(/^\/Daniela.*Berdejo$/i, requireAuthPage, requireSpecificRoute('/Daniela Berdejo'), (req, res) => {
     console.log(`✅ Ruta genérica Daniela Berdejo capturada: ${req.path} para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Daniel Álvarez - múltiples variantes de codificación - PROTEGIDAS
+app.get('/Daniel%20Álvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Acceso autorizado a Daniel Álvarez para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/Daniel%20Alvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Acceso autorizado a Daniel Álvarez para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/Daniel Álvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Acceso autorizado a Daniel Álvarez para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Ruta genérica para capturar cualquier variante de Daniel Álvarez - PROTEGIDA
+app.get(/^\/Daniel.*Álvarez$/i, requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Ruta genérica Daniel Álvarez capturada: ${req.path} para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get(/^\/Daniel.*Alvarez$/i, requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Ruta genérica Daniel Alvarez capturada: ${req.path} para: ${req.session.user.email}`);
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

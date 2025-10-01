@@ -851,7 +851,7 @@
                             <div><strong>Fecha:</strong> ${evaluation.fecha}</div>
                             <div><strong>Origen:</strong> <span style="color: var(--accent); font-weight: bold;">${getOrigenIcon(evaluation.origen_bd)} ${evaluation.origen_bd || 'No especificado'}</span></div>
                             <div><strong>Calificación Final:</strong> <span style="color: var(--primary); font-weight: bold; font-size: 1.2rem;">${cal.final_score || 'N/A'}</span></div>
-                            <div><strong>Etiqueta:</strong> <span class="score-label ${getScoreLabel(cal.final_score).class}">${cal.label || 'N/A'}</span></div>
+                            <div><strong>Etiqueta:</strong> <span class="score-label ${getScoreLabel(cal.final_score).class}">${getScoreLabel(cal.final_score).text}</span></div>
                         </div>
                     </div>
                 `;
