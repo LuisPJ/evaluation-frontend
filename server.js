@@ -1138,7 +1138,18 @@ app.get(/^\/Daniela.*Berdejo$/i, requireAuthPage, requireSpecificRoute('/Daniela
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Daniel Álvarez - múltiples variantes de codificación - PROTEGIDAS
+// Ruta genérica para capturar cualquier variante de Daniel Álvarez - PROTEGIDA (PRIMERO)
+app.get(/^\/Daniel.*Álvarez$/i, requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Ruta genérica Daniel Álvarez capturada: ${req.path} para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get(/^\/Daniel.*Alvarez$/i, requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Ruta genérica Daniel Alvarez capturada: ${req.path} para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Daniel Álvarez - múltiples variantes de codificación - PROTEGIDAS (DESPUÉS)
 app.get('/Daniel%20Álvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
     console.log(`✅ Acceso autorizado a Daniel Álvarez para: ${req.session.user.email}`);
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -1161,17 +1172,6 @@ app.get('/Daniel%20Alvarez', requireAuthPage, requireSpecificRoute('/Daniel Álv
 
 app.get('/Daniel Álvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
     console.log(`✅ Acceso autorizado a Daniel Álvarez (espacios) para: ${req.session.user.email}`);
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Ruta genérica para capturar cualquier variante de Daniel Álvarez - PROTEGIDA
-app.get(/^\/Daniel.*Álvarez$/i, requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
-    console.log(`✅ Ruta genérica Daniel Álvarez capturada: ${req.path} para: ${req.session.user.email}`);
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get(/^\/Daniel.*Alvarez$/i, requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
-    console.log(`✅ Ruta genérica Daniel Alvarez capturada: ${req.path} para: ${req.session.user.email}`);
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
