@@ -1144,13 +1144,18 @@ app.get('/Daniel%20Álvarez', requireAuthPage, requireSpecificRoute('/Daniel Ál
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.get('/Daniel%20%C3%81lvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
+    console.log(`✅ Acceso autorizado a Daniel Álvarez (UTF-8) para: ${req.session.user.email}`);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.get('/Daniel%20Alvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
-    console.log(`✅ Acceso autorizado a Daniel Álvarez para: ${req.session.user.email}`);
+    console.log(`✅ Acceso autorizado a Daniel Alvarez (sin acento) para: ${req.session.user.email}`);
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/Daniel Álvarez', requireAuthPage, requireSpecificRoute('/Daniel Álvarez'), (req, res) => {
-    console.log(`✅ Acceso autorizado a Daniel Álvarez para: ${req.session.user.email}`);
+    console.log(`✅ Acceso autorizado a Daniel Álvarez (espacios) para: ${req.session.user.email}`);
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
