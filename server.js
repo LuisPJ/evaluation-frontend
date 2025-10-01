@@ -89,7 +89,7 @@ app.use(session({
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(express.static('public'));
+// app.use(express.static('public')); // Movido después de las rutas específicas
 
 // app.use('/api', networkRestrictionMiddleware); // Comentado para permitir acceso desde cualquier IP
 
@@ -1188,6 +1188,9 @@ app.get('/', (req, res) => {
     console.log('🔒 Usuario no autenticado, redirigiendo a login');
     res.redirect('/login.html');
 });
+
+// Middleware para archivos estáticos (después de todas las rutas específicas)
+app.use(express.static('public'));
 
 // Start server
 app.listen(PORT, () => {
