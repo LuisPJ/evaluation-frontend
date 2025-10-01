@@ -663,11 +663,13 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
         
         // Filtrar evaluaciones por permisos de vendedor si es necesario
         let filteredEvals = allEvals;
-        if (routePermissions) {
+        if (routePermissions && routePermissions.allowedSellers.length > 0) {
             filteredEvals = allEvals.filter(eval => 
                 routePermissions.allowedSellers.includes(eval.seller_name)
             );
             console.log(`🔐 Evaluaciones filtradas por permisos: ${filteredEvals.length}`);
+        } else if (routePermissions && routePermissions.allowedSellers.length === 0) {
+            console.log(`🔐 Acceso completo - sin filtros de vendedor`);
         }
         
         // Filter manually for evaluations with valid final_score
