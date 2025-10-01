@@ -886,18 +886,23 @@ app.get('/api/seller/:id', requireAuth, async (req, res) => {
             console.log(`   Nombre unificado: "${unifiedSellerName}"`);
             console.log(`   Vendedores permitidos:`, routePermissions.allowedSellers);
             
-            // Verificar tanto nombre original como unificado
-            const isAllowed = routePermissions.allowedSellers.includes(sellerName) || 
-                            routePermissions.allowedSellers.includes(unifiedSellerName);
-            
-            if (!isAllowed) {
-                console.log(`❌ Acceso denegado para "${sellerName}"`);
-                return res.status(403).json({ 
-                    error: 'Acceso denegado', 
-                    message: 'No tienes permisos para ver este vendedor' 
-                });
+            // Si el array está vacío, significa acceso a TODOS los vendedores
+            if (!routePermissions.allowedSellers || routePermissions.allowedSellers.length === 0) {
+                console.log(`✅ Acceso completo permitido para "${sellerName}" (sin restricciones)`);
             } else {
-                console.log(`✅ Acceso permitido para "${sellerName}"`);
+                // Verificar tanto nombre original como unificado
+                const isAllowed = routePermissions.allowedSellers.includes(sellerName) || 
+                                routePermissions.allowedSellers.includes(unifiedSellerName);
+                
+                if (!isAllowed) {
+                    console.log(`❌ Acceso denegado para "${sellerName}"`);
+                    return res.status(403).json({ 
+                        error: 'Acceso denegado', 
+                        message: 'No tienes permisos para ver este vendedor' 
+                    });
+                } else {
+                    console.log(`✅ Acceso permitido para "${sellerName}"`);
+                }
             }
         }
         
@@ -997,18 +1002,23 @@ app.get('/api/evaluation/:leadId', requireAuth, async (req, res) => {
             console.log(`   Vendedor unificado: "${unifiedSellerName}"`);
             console.log(`   Vendedores permitidos:`, routePermissions.allowedSellers);
             
-            // Verificar tanto nombre original como unificado
-            const isAllowed = routePermissions.allowedSellers.includes(sellerName) || 
-                            routePermissions.allowedSellers.includes(unifiedSellerName);
-            
-            if (!isAllowed) {
-                console.log(`❌ Acceso denegado para lead ${evaluation.lead_id} del vendedor "${sellerName}"`);
-                return res.status(403).json({ 
-                    error: 'Acceso denegado', 
-                    message: 'No tienes permisos para ver este lead' 
-                });
+            // Si el array está vacío, significa acceso a TODOS los vendedores
+            if (!routePermissions.allowedSellers || routePermissions.allowedSellers.length === 0) {
+                console.log(`✅ Acceso completo permitido para lead ${evaluation.lead_id} del vendedor "${sellerName}" (sin restricciones)`);
             } else {
-                console.log(`✅ Acceso permitido para lead ${evaluation.lead_id} del vendedor "${sellerName}"`);
+                // Verificar tanto nombre original como unificado
+                const isAllowed = routePermissions.allowedSellers.includes(sellerName) || 
+                                routePermissions.allowedSellers.includes(unifiedSellerName);
+                
+                if (!isAllowed) {
+                    console.log(`❌ Acceso denegado para lead ${evaluation.lead_id} del vendedor "${sellerName}"`);
+                    return res.status(403).json({ 
+                        error: 'Acceso denegado', 
+                        message: 'No tienes permisos para ver este lead' 
+                    });
+                } else {
+                    console.log(`✅ Acceso permitido para lead ${evaluation.lead_id} del vendedor "${sellerName}"`);
+                }
             }
         }
         try {
