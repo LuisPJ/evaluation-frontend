@@ -304,7 +304,10 @@ const ROUTE_PERMISSIONS = {
         allowedSellers: [
             'María Calle',        // Nombre unificado
             'María Isabel Calle', // Nombre original en BD (se unifica a María Calle)
-            'Geraldin Cardona'
+            'Geraldin Cardona',
+            'Juan Vasquez',       // Agregado: Juan Vásquez
+            'Juan Vásquez',       // Variante con acento
+            'Aura Silva'          // Agregado: Aura Silva
         ]
     },
     '/Katherine López': {
