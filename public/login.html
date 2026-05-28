@@ -332,7 +332,9 @@
     </div>
 
     <script>
-        const API_URL = '/api';
+        const API_URL = window.location.hostname === 'evaluador-frontend.onrender.com'
+            ? 'https://evaluador-backend-6g1a.onrender.com/api'
+            : '/api';
         
         // Prevenir acceso si ya está logueado
         document.addEventListener('DOMContentLoaded', () => {

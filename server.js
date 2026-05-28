@@ -11,7 +11,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3005;
 
-// Configurar trust proxy para Railway
+// Configurar trust proxy para Render/Railway (detrás de proxy reverso)
 app.set('trust proxy', 1);
 
 const corsOptions = {
@@ -23,16 +23,8 @@ const corsOptions = {
         if (environment === 'production') {
             allowedOrigins = [
                 process.env.FRONTEND_URL,
-                process.env.RAILWAY_STATIC_URL,
-                'https://evaluation-frontend-production.up.railway.app'
+                'https://evaluador-frontend.onrender.com'
             ].filter(Boolean);
-            
-            if (allowedOrigins.length === 0) {
-                const railwayPattern = /^https:\/\/.*\.railway\.app$/;
-                if (origin && railwayPattern.test(origin)) {
-                    allowedOrigins.push(origin);
-                }
-            }
         } else {
             allowedOrigins = [
                 'http://localhost:3005',
@@ -46,7 +38,12 @@ const corsOptions = {
             return callback(null, true);
         }
         
-        if (allowedOrigins.includes(origin)) {
+        const renderPattern = /^https:\/\/.*\.onrender\.com$/;
+        const railwayPattern = /^https:\/\/.*\.railway\.app$/;
+        const originPermitido = allowedOrigins.includes(origin) ||
+            (environment === 'production' && (renderPattern.test(origin) || railwayPattern.test(origin)));
+        
+        if (originPermitido) {
             console.log(`✅ CORS: Permitido desde ${origin}`);
             callback(null, true);
         } else {
@@ -98,7 +95,7 @@ const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
     console.error('ERROR: Variables de entorno faltantes:', missingVars.join(', '));
-    console.error('Configura estas variables en Railway Dashboard o en tu archivo .env');
+    console.error('Configura estas variables en Render Dashboard o en tu archivo .env');
     process.exit(1);
 }
 
@@ -406,8 +403,10 @@ function getUserRedirectUrl(email) {
     const route = getUserRoute(email);
     if (!route) return '/';
     
-    // Codificar la URL para manejar caracteres especiales
-    return encodeURIComponent(route);
+    // Codificar segmentos del path para manejar espacios y caracteres especiales
+    return route.split('/').map((part, index) =>
+        index === 0 ? part : encodeURIComponent(part)
+    ).join('/');
 }
 
 // Función para ejecutar queries en ambas BDs y combinar resultados
@@ -1215,14 +1214,10 @@ app.listen(PORT, () => {
     
     if (environment === 'production') {
         const frontendUrl = process.env.FRONTEND_URL;
-        const railwayUrl = process.env.RAILWAY_STATIC_URL;
         
         console.log(`🛡️ CORS configurado para producción:`);
         if (frontendUrl) console.log(`   ✅ Frontend URL: ${frontendUrl}`);
-        if (railwayUrl) console.log(`   ✅ Railway URL: ${railwayUrl}`);
-        if (!frontendUrl && !railwayUrl) {
-            console.log(`   ⚠️ Sin URLs específicas - usando patrón *.railway.app`);
-        }
+        console.log(`   ✅ Patrones permitidos: *.onrender.com, *.railway.app`);
     } else {
         console.log(`🛡️ CORS configurado para desarrollo:`);
         console.log(`   ✅ http://localhost:3005`);

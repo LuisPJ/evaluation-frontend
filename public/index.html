@@ -604,7 +604,9 @@
     </div>
 
     <script>
-        const API_URL = '/api'; 
+        const API_URL = window.location.hostname === 'evaluador-frontend.onrender.com'
+            ? 'https://evaluador-backend-6g1a.onrender.com/api'
+            : '/api';
         let allData = null;
         
         // Detectar ruta actual para permisos
@@ -641,7 +643,8 @@
             
             return fetch(url, {
                 ...options,
-                headers
+                headers,
+                credentials: 'include'
             });
         }
 
