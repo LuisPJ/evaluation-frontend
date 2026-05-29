@@ -608,6 +608,11 @@
             ? 'https://evaluador-backend-6g1a.onrender.com/api'
             : '/api';
         let allData = null;
+
+        function obtenerHeadersAuth() {
+            const token = sessionStorage.getItem('authToken');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
         
         // Detectar ruta actual para permisos
         function getCurrentRoute() {
@@ -633,6 +638,7 @@
             const route = getCurrentRoute();
             const headers = {
                 'Content-Type': 'application/json',
+                ...obtenerHeadersAuth(),
                 ...options.headers
             };
             
@@ -643,8 +649,7 @@
             
             return fetch(url, {
                 ...options,
-                headers,
-                credentials: 'include'
+                headers
             });
         }
 
@@ -1232,10 +1237,11 @@
             try {
                 const response = await fetch(`${API_URL}/auth/check`, {
                     method: 'GET',
-                    credentials: 'include'
+                    headers: obtenerHeadersAuth()
                 });
                 
                 if (!response.ok) {
+                    sessionStorage.removeItem('authToken');
                     console.log('🔒 No hay sesión activa, redirigiendo a login');
                     window.location.href = '/login.html';
                     return false;
@@ -1250,6 +1256,7 @@
                 return true;
             } catch (error) {
                 console.error('Error verificando autenticación:', error);
+                sessionStorage.removeItem('authToken');
                 window.location.href = '/login.html';
                 return false;
             }
@@ -1296,12 +1303,13 @@
             }
             
             try {
-                const response = await fetch(`${API_URL}/auth/logout`, {
+                await fetch(`${API_URL}/auth/logout`, {
                     method: 'POST',
-                    credentials: 'include'
+                    headers: obtenerHeadersAuth()
                 });
                 
                 console.log('🔓 Sesión cerrada');
+                sessionStorage.removeItem('authToken');
                 
                 // Limpiar datos locales
                 allData = null;
@@ -1312,7 +1320,7 @@
                 
             } catch (error) {
                 console.error('Error al cerrar sesión:', error);
-                // Forzar redirección incluso si hay error
+                sessionStorage.removeItem('authToken');
                 window.location.href = '/login.html';
             }
         }
@@ -1322,7 +1330,7 @@
             // Verificar si hay sesión activa
             fetch(`${API_URL}/auth/check`, {
                 method: 'GET',
-                credentials: 'include'
+                headers: obtenerHeadersAuth()
             }).then(response => {
                 if (!response.ok) {
                     // No hay sesión, redirigir a login

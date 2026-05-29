@@ -335,13 +335,17 @@
         const API_URL = window.location.hostname === 'evaluador-frontend.onrender.com'
             ? 'https://evaluador-backend-6g1a.onrender.com/api'
             : '/api';
+
+        function obtenerHeadersAuth() {
+            const token = sessionStorage.getItem('authToken');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
         
         // Prevenir acceso si ya está logueado
         document.addEventListener('DOMContentLoaded', () => {
-            // Verificar si ya hay una sesión activa
             fetch(`${API_URL}/auth/check`, {
                 method: 'GET',
-                credentials: 'include'
+                headers: obtenerHeadersAuth()
             })
             .then(response => response.json())
             .then(data => {
@@ -429,17 +433,18 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include',
                     body: JSON.stringify({ email, password })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Login exitoso
                     console.log('✅ Login exitoso:', data);
                     
-                    // Redirigir según el usuario
+                    if (data.token) {
+                        sessionStorage.setItem('authToken', data.token);
+                    }
+                    
                     window.location.href = data.redirectUrl || '/index.html';
                 } else {
                     // Error en login

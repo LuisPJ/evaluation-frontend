@@ -7,6 +7,7 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -70,16 +71,17 @@ const loginLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Configuración de sesiones
+// Configuración de sesiones (local) + JWT (frontend en dominio distinto en Render)
 app.use(session({
     secret: process.env.SESSION_SECRET || 'tu-clave-secreta-muy-segura-cambiala-en-produccion',
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
-        secure: true, // HTTPS en producción
-        httpOnly: true, // Prevenir XSS
-        maxAge: 24 * 60 * 60 * 1000, // 24 horas
-        sameSite: 'none' // Permitir cookies cross-site
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
 }));
 
@@ -349,9 +351,32 @@ function getRoutePermissions(req) {
     return ROUTE_PERMISSIONS[routePath] || null;
 }
 
+const JWT_EXPIRES_IN = '24h';
+
+function generarToken(usuario) {
+    return jwt.sign(
+        { id: usuario.id, email: usuario.email, nombre: usuario.nombre },
+        process.env.SESSION_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+    );
+}
+
+function obtenerUsuarioAutenticado(req) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+        try {
+            return jwt.verify(authHeader.slice(7), process.env.SESSION_SECRET);
+        } catch (error) {
+            return null;
+        }
+    }
+    return req.session?.user || null;
+}
+
 // Middleware de autenticación
 function requireAuth(req, res, next) {
-    if (!req.session || !req.session.user) {
+    const usuario = obtenerUsuarioAutenticado(req);
+    if (!usuario) {
         return res.status(401).json({ 
             error: 'No autorizado', 
             message: 'Debe iniciar sesión para acceder',
@@ -359,14 +384,16 @@ function requireAuth(req, res, next) {
         });
     }
     
-    console.log(`✅ Usuario autenticado: ${req.session.user.email}`);
+    req.usuarioAutenticado = usuario;
+    console.log(`✅ Usuario autenticado: ${usuario.email}`);
     next();
 }
 
 // Middleware para verificar permisos de ruta específica
 function requireRouteAccess(routeName) {
     return (req, res, next) => {
-        if (!req.session || !req.session.user) {
+        const usuario = obtenerUsuarioAutenticado(req);
+        if (!usuario) {
             return res.status(401).json({ 
                 error: 'No autorizado', 
                 message: 'Debe iniciar sesión para acceder',
@@ -374,7 +401,7 @@ function requireRouteAccess(routeName) {
             });
         }
 
-        const userRoute = getUserRoute(req.session.user.email);
+        const userRoute = getUserRoute(usuario.email);
         if (userRoute !== routeName) {
             return res.status(403).json({ 
                 error: 'Acceso denegado', 
@@ -509,13 +536,14 @@ function filterSellersByPermissions(sellers, permissions) {
 
 // Verificar estado de autenticación
 app.get('/api/auth/check', (req, res) => {
-    if (req.session && req.session.user) {
-        const redirectUrl = getUserRedirectUrl(req.session.user.email);
+    const usuario = obtenerUsuarioAutenticado(req);
+    if (usuario) {
+        const redirectUrl = getUserRedirectUrl(usuario.email);
         res.json({ 
             authenticated: true,
             user: {
-                email: req.session.user.email,
-                nombre: req.session.user.nombre
+                email: usuario.email,
+                nombre: usuario.nombre
             },
             redirectUrl: redirectUrl
         });
@@ -581,13 +609,15 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
             console.log(`⚠️ Usuario sin ruta específica, acceso general: ${email}`);
         }
 
-        // Crear sesión
-        req.session.user = {
+        // Crear sesión (local) y token JWT (frontend en otro dominio)
+        const datosUsuario = {
             id: user.id,
             email: user.email,
             nombre: user.nombre,
             loginTime: new Date()
         };
+        req.session.user = datosUsuario;
+        const token = generarToken(datosUsuario);
 
         console.log(`✅ Login exitoso para: ${email} -> ${redirectUrl}`);
 
@@ -595,6 +625,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         res.json({
             success: true,
             message: 'Login exitoso',
+            token: token,
             user: {
                 email: user.email,
                 nombre: user.nombre

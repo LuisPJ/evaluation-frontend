@@ -1,12 +1,13 @@
 {
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "mysql2": "^3.14.4",
-    "bcrypt": "^5.1.1",
+    "express-rate-limit": "^7.1.5",
     "express-session": "^1.17.3",
-    "express-rate-limit": "^7.1.5"
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.14.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
