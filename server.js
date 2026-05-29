@@ -401,7 +401,7 @@ function getUserRoute(email) {
 // Función para obtener URL de redirección del usuario
 function getUserRedirectUrl(email) {
     const route = getUserRoute(email);
-    if (!route) return '/';
+    if (!route) return '/index.html';
     
     // Codificar segmentos del path para manejar espacios y caracteres especiales
     return route.split('/').map((part, index) =>
@@ -575,12 +575,10 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
         // Verificar si el usuario tiene acceso a alguna ruta
         const userRoute = getUserRoute(email);
+        const redirectUrl = getUserRedirectUrl(email);
+
         if (!userRoute) {
-            console.log(`❌ Usuario sin permisos de ruta: ${email}`);
-            return res.status(403).json({
-                error: 'Sin permisos',
-                message: 'Su cuenta no tiene permisos para acceder al sistema'
-            });
+            console.log(`⚠️ Usuario sin ruta específica, acceso general: ${email}`);
         }
 
         // Crear sesión
@@ -591,7 +589,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
             loginTime: new Date()
         };
 
-        console.log(`✅ Login exitoso para: ${email} -> ${userRoute}`);
+        console.log(`✅ Login exitoso para: ${email} -> ${redirectUrl}`);
 
         // Responder con éxito
         res.json({
@@ -601,7 +599,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
                 email: user.email,
                 nombre: user.nombre
             },
-            redirectUrl: userRoute
+            redirectUrl: redirectUrl
         });
 
     } catch (error) {

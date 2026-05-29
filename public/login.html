@@ -347,7 +347,7 @@
             .then(data => {
                 if (data.authenticated) {
                     // Ya está logueado, redirigir
-                    window.location.href = data.redirectUrl || '/';
+                    window.location.href = data.redirectUrl || '/index.html';
                 }
             })
             .catch(error => {
@@ -440,7 +440,7 @@
                     console.log('✅ Login exitoso:', data);
                     
                     // Redirigir según el usuario
-                    window.location.href = data.redirectUrl;
+                    window.location.href = data.redirectUrl || '/index.html';
                 } else {
                     // Error en login
                     hideLoading();
