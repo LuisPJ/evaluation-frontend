@@ -340,6 +340,18 @@
             const token = sessionStorage.getItem('authToken');
             return token ? { 'Authorization': `Bearer ${token}` } : {};
         }
+
+        function estaAutenticado(data) {
+            return data.autenticado === true || data.authenticated === true;
+        }
+
+        function obtenerToken(data) {
+            return data.token || data.accessToken || data.access_token || null;
+        }
+
+        function obtenerMensajeError(data) {
+            return data.mensaje || data.message || (Array.isArray(data.errores) ? data.errores[0] : null) || 'Error al iniciar sesión';
+        }
         
         // Prevenir acceso si ya está logueado
         document.addEventListener('DOMContentLoaded', () => {
@@ -349,9 +361,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.authenticated) {
-                    // Ya está logueado, redirigir
-                    window.location.href = data.redirectUrl || '/index.html';
+                if (estaAutenticado(data)) {
+                    window.location.href = '/index.html';
                 }
             })
             .catch(error => {
@@ -438,26 +449,16 @@
                 
                 const data = await response.json();
                 
-                if (response.ok) {
+                if (data.exito && obtenerToken(data)) {
                     console.log('✅ Login exitoso:', data);
-                    
-                    if (data.token) {
-                        sessionStorage.setItem('authToken', data.token);
-                    }
-                    
-                    window.location.href = data.redirectUrl || '/index.html';
+                    sessionStorage.setItem('authToken', obtenerToken(data));
+                    window.location.href = '/index.html';
+                } else if (data.exito && estaAutenticado(data)) {
+                    console.log('✅ Login exitoso:', data);
+                    window.location.href = '/index.html';
                 } else {
-                    // Error en login
                     hideLoading();
-                    showError(data.message || 'Error al iniciar sesión');
-                    
-                    // Marcar campos como error
-                    if (data.field) {
-                        document.getElementById(data.field).classList.add('error');
-                        setTimeout(() => {
-                            document.getElementById(data.field).classList.remove('error');
-                        }, 3000);
-                    }
+                    showError(obtenerMensajeError(data));
                 }
             } catch (error) {
                 hideLoading();

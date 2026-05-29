@@ -613,6 +613,14 @@
             const token = sessionStorage.getItem('authToken');
             return token ? { 'Authorization': `Bearer ${token}` } : {};
         }
+
+        function estaAutenticado(data) {
+            return data.autenticado === true || data.authenticated === true;
+        }
+
+        function obtenerUsuario(data) {
+            return data.admin || data.user || null;
+        }
         
         // Detectar ruta actual para permisos
         function getCurrentRoute() {
@@ -1240,18 +1248,18 @@
                     headers: obtenerHeadersAuth()
                 });
                 
-                if (!response.ok) {
+                const data = await response.json();
+
+                if (!estaAutenticado(data)) {
                     sessionStorage.removeItem('authToken');
                     console.log('🔒 No hay sesión activa, redirigiendo a login');
                     window.location.href = '/login.html';
                     return false;
                 }
                 
-                const data = await response.json();
-                console.log('✅ Usuario autenticado:', data.user.email);
-                
-                // Agregar botón de logout
-                addLogoutButton(data.user);
+                const usuario = obtenerUsuario(data);
+                console.log('✅ Usuario autenticado:', usuario.email);
+                addLogoutButton(usuario);
                 
                 return true;
             } catch (error) {
@@ -1306,7 +1314,7 @@
                 await fetch(`${API_URL}/auth/logout`, {
                     method: 'POST',
                     headers: obtenerHeadersAuth()
-                });
+                }).catch(() => {});
                 
                 console.log('🔓 Sesión cerrada');
                 sessionStorage.removeItem('authToken');
@@ -1331,9 +1339,8 @@
             fetch(`${API_URL}/auth/check`, {
                 method: 'GET',
                 headers: obtenerHeadersAuth()
-            }).then(response => {
-                if (!response.ok) {
-                    // No hay sesión, redirigir a login
+            }).then(response => response.json()).then(data => {
+                if (!estaAutenticado(data)) {
                     window.location.href = '/login.html';
                 }
             }).catch(() => {
